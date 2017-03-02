@@ -7,11 +7,13 @@ class Player {
 
     public static void main(String args[]) {
         
-        FactoryManager manager = new FactoryManager(); // main manager
+        
         
         Scanner in = new Scanner(System.in);
         
         Integer factoryCount = in.nextInt(); // the number of factories
+        
+        FactoryManager manager = new FactoryManager(factoryCount); // main manager
         
         Integer count = 0;
         
@@ -105,9 +107,15 @@ class Player {
 
 class FactoryManager{
 	private ArrayList<Factory> factories;
+	private Integer factoryCount;
 	
 	public FactoryManager(){
 		factories = new ArrayList<Factory>();
+	}
+	
+	public FactoryManager(Integer c){
+		factories = new ArrayList<Factory>();
+		factoryCount = c;
 	}
 	
 	
@@ -130,36 +138,43 @@ class FactoryManager{
 				temp = f;
 			}
 		}
-		//temp is our most controlled factory
-		
-		Integer closest = temp.getClosestFactory();
 		
 		
-        command+= "MOVE " + temp.getID() + " " + closest + " " + "3"+";";
-				
-		//if we control all bases...
-		if(command.length()==0){
-		    for(Factory f : factories){
+		//CASE 1: all bases except 2 are neutral (beginning) and no Cyborgs we control in transit
+			//send 3 cyborgs to the nearest two bases until it is under our control
+			//send 1 cyborg all the other factories
+		Integer neutrals = 0;
+		ArrayList<Integer> neutralIDs = new ArrayList<Integer>();
+		for(Factory f : factories){
+			if(f.getC() == 0){
+				neutralIDs.add(f.getID());
+				neutrals++;
+			}
+		}
+		if(neutrals == factoryCount-3){
+			//get two closest factories
+			Integer closest1 = temp.getClosestFactory();
+			Integer closest2 = temp.getClosestFactory(closest1); //finds next closest factory
 			
-			    if(f.getC()==1 && f.getID()!=temp.getID()){
-			    command+= "MOVE " + temp.getID() + " " + f.getID() + " " + "2"+";";
-				//tempdistance = temp.distanceTo(f);
-				//closestFactory = f;
-			    }
-		    }
+			command+= "MOVE " + temp.getID() + " " + closest1 + " " + "3"+";";
+			command+= "MOVE " + temp.getID() + " " + closest2 + " " + "3"+";";
+		}
+		for(Integer i : neutralIDs){
+			command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
+		}
+			
+			
+		//CASE 2: all bases except 2 are neutral and Cyborgs we control are in transit
+		
+		
+		
+		
+		//END OF GAME CASE (don't change this)
+		if(command.length() == 0){
+		    command += "WAIT;";
 		}
 		
-		//decide how many cyborgs to send
-		Integer sendCount = 0;
-		if(temp.getCC() > 3){
-			sendCount = 3;
-		}
-		else if(temp.getCC() == 3){
-			sendCount = 2;
-		}
-		else if(temp.getCC() == 2){
-			sendCount = 1;
-		}
+
 		
 		
 		
@@ -262,6 +277,25 @@ class Factory{
 			    closest = entry.getKey();
 	        }
 	        else if(entry.getValue() < dist){
+	            dist = entry.getValue();
+	            closest = entry.getKey();
+	        }
+		}
+		return closest;
+	        
+	    
+	}
+	
+	//exclude a specific factory from the possible factories
+	public Integer getClosestFactory(Integer i){
+	    Integer dist = -1;
+	    Integer closest = -1;
+	    for (Map.Entry<Integer, Integer> entry : distances.entrySet()){
+	        if(dist == -1 && entry.getKey()!= i){
+			    dist = entry.getValue();
+			    closest = entry.getKey();
+	        }
+	        else if(entry.getValue() < dist && entry.getKey()!= i){
 	            dist = entry.getValue();
 	            closest = entry.getKey();
 	        }
