@@ -73,6 +73,9 @@ class Player {
 
         // game loop
         while (true) {
+            
+            manager.clearTroops();
+            
             Integer entityCount = in.nextInt(); // the number of entities
             for (Integer i = 0; i < entityCount; i++) {
                 Integer entityId = in.nextInt();
@@ -92,6 +95,12 @@ class Player {
 						}
 					}
 				}
+				
+				if(entityType.equals("TROOP")){
+				    Troop t = new Troop(arg1, arg2, arg3, arg4, arg5);
+				    manager.addTroop(t);
+				}
+				    
                 
                 
             }
@@ -107,14 +116,17 @@ class Player {
 
 class FactoryManager{
 	private ArrayList<Factory> factories;
+	private ArrayList<Troop> troops;
 	private Integer factoryCount;
 	
 	public FactoryManager(){
 		factories = new ArrayList<Factory>();
+		troops = new ArrayList<Troop>();
 	}
 	
 	public FactoryManager(Integer c){
 		factories = new ArrayList<Factory>();
+		troops = new ArrayList<Troop>();
 		factoryCount = c;
 	}
 	
@@ -125,6 +137,18 @@ class FactoryManager{
 	
 	public ArrayList<Factory> getFactories(){
 		return factories;
+	}
+	
+	public void addTroop(Troop t){
+	    troops.add(t);
+	}
+	
+	public ArrayList<Troop> getTroops(){
+	    return troops;
+	}
+	
+	public void clearTroops(){
+	    troops.clear();
 	}
 	
 	
@@ -138,11 +162,7 @@ class FactoryManager{
 				temp = f;
 			}
 		}
-		
-		
-		//CASE 1: all bases except 2 are neutral (beginning) and no Cyborgs we control in transit
-			//send 3 cyborgs to the nearest two bases until it is under our control
-			//send 1 cyborg all the other factories
+		//count how many neutral bases and store their ID
 		Integer neutrals = 0;
 		ArrayList<Integer> neutralIDs = new ArrayList<Integer>();
 		for(Factory f : factories){
@@ -151,25 +171,41 @@ class FactoryManager{
 				neutrals++;
 			}
 		}
-		if(neutrals == factoryCount-3){
+		//count how many troops are in transit
+        Integer ourTroops = 0;
+		for(Troop t : troops){
+		    if(t.getC() == 1){
+		        ourTroops++;
+		    }
+		}
+		
+		
+		//CASE 1A: all bases except 2 are neutral (beginning) and no Cyborgs in transit
+			//send 3 cyborgs to the nearest two bases until it is under our control
+			//send 1 cyborg all the other factories
+		
+		
+		if(neutrals == factoryCount-3 && ourTroops==0){
 			//get two closest factories
 			Integer closest1 = temp.getClosestFactory();
 			Integer closest2 = temp.getClosestFactory(closest1); //finds next closest factory
 			
 			command+= "MOVE " + temp.getID() + " " + closest1 + " " + "3"+";";
 			command+= "MOVE " + temp.getID() + " " + closest2 + " " + "3"+";";
+			
+			for(Integer i : neutralIDs){
+			    command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
+		    }
 		}
-		for(Integer i : neutralIDs){
-			command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
-		}
+		
 			
 			
-		//CASE 2: all bases except 2 are neutral and Cyborgs we control are in transit
+		//CASE 1B: all bases except 2 are neutral and Cyborgs we control are in transit
 		
 		
 		
 		
-		//END OF GAME CASE (don't change this)
+		//END OF GAME CASE
 		if(command.length() == 0){
 		    command += "WAIT;";
 		}
@@ -314,4 +350,41 @@ class Factory{
 	    return null;
 
 	}
+}
+
+class Troop{
+    
+    private int controlled;
+    private int factorySource;
+    private int factoryDest;
+    private int cyborgCount;
+    private int arrivalTime;
+    
+    public Troop(int c, int f, int f2, int c2, int a){
+        controlled = c;
+        factorySource = f;
+        factoryDest = f2;
+        cyborgCount = c2;
+        arrivalTime = a;
+    }
+    
+    public Integer getC(){
+        return controlled;
+    }
+    
+    public Integer getSource(){
+        return factorySource;
+    }
+    
+    public Integer getDest(){
+        return factoryDest;
+    }
+    
+    public Integer getCC(){
+        return cyborgCount;
+    }
+    
+    public Integer getA(){
+        return arrivalTime;
+    }
 }
