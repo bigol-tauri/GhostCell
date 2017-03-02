@@ -179,33 +179,61 @@ class FactoryManager{
 		    }
 		}
 		
+		//get two closest factories for use in cases
+		Integer closest1 = temp.getClosestFactory();
+		Integer closest2 = temp.getClosestFactory(closest1); //finds next closest factory
 		
-		//CASE 1A: all bases except 2 are neutral (beginning) and no Cyborgs in transit
+		
+////////CASE 1A: all bases except 2 are neutral (beginning), no Cyborgs in transit
 			//send 3 cyborgs to the nearest two bases until it is under our control
 			//send 1 cyborg all the other factories
-		
-		
 		if(neutrals == factoryCount-3 && ourTroops==0){
-			//get two closest factories
-			Integer closest1 = temp.getClosestFactory();
-			Integer closest2 = temp.getClosestFactory(closest1); //finds next closest factory
 			
+			
+			//send 3 to each
 			command+= "MOVE " + temp.getID() + " " + closest1 + " " + "3"+";";
 			command+= "MOVE " + temp.getID() + " " + closest2 + " " + "3"+";";
 			
+			//send 1 to rest
 			for(Integer i : neutralIDs){
 			    command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
 		    }
 		}
 		
 			
-			
-		//CASE 1B: all bases except 2 are neutral and Cyborgs we control are in transit
+////////CASE 1B: all bases except 2 are neutral, Cyborgs we control are in transit, temp is 2 or less
+		    //WAIT
+		if(neutrals == factoryCount-3 && ourTroops>0 && temp.getCC()<=2){
+		    command+="MSG "+ (temp.getCC())+";";
+			command+= "WAIT;";
+		}
+		
+//////////CASE 2: Cyborgs we control are in transit, temp is 3 or more
+            //if there are three cyborgs available send 2 to the closest and 1 to the next closest
+            //if there are four cyborgs available send 2 to the closest and 2 to the next closest
+            //if there are five or more cyborgs send 2 to the 2 closest and 1 or more to all neutrals
+		if(ourTroops>0 && temp.getCC()>=3){
+			if(temp.getCC()==3){
+			    command+= "MOVE " + temp.getID() + " " + closest1 + " " + "2"+";";
+			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "1"+";";
+			}
+			if(temp.getCC()==4){
+			    command+= "MOVE " + temp.getID() + " " + closest1 + " " + "2"+";";
+			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "2"+";";
+			}
+			if(temp.getCC()>4){
+			    command+= "MOVE " + temp.getID() + " " + closest1 + " " + "2"+";";
+			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "2"+";";
+			    for(Integer i : neutralIDs){
+			        command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
+		        }
+			}
+		}
 		
 		
 		
 		
-		//END OF GAME CASE
+		//END OF GAME CASE DON'T CHANGE
 		if(command.length() == 0){
 		    command += "WAIT;";
 		}
