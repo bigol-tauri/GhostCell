@@ -197,6 +197,16 @@ class FactoryManager{
 				neutrals++;
 			}
 		}
+        
+        //count how many enemy bases and store their ID
+        Integer enemies = 0;
+		ArrayList<Integer> enemyIDs = new ArrayList<Integer>();
+		for(Factory f : factories){
+			if(f.getC() == 0){
+				enemyIDs.add(f.getID());
+				enemies++;
+			}
+		}
 		
 		//count how many controlled bases and store their ID
 		Integer controlled = 0;
