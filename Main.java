@@ -7,17 +7,12 @@ class Player {
 
     public static void main(String args[]) {
         
-        
-        
         Scanner in = new Scanner(System.in);
-        
         Integer factoryCount = in.nextInt(); // the number of factories
-        
         FactoryManager manager = new FactoryManager(factoryCount); // main manager
-        
         Integer count = 0;
-        
         Integer linkCount = in.nextInt(); // the number of links between factories
+        
         for (Integer i = 0; i < linkCount; i++) {
             count++;
             Integer factory1 = in.nextInt();
@@ -37,32 +32,23 @@ class Player {
                 manager.addFactory(newFactory2);
             }
             
-            boolean c = false;
-            
-            for(Factory f: manager.getFactories()){
-                //if this factory exists but the entry doesn't, add the entry
-                if(f.getID() == factory1){
-                    c = true;
-                    if(f.getDistances().get(factory2) == null){
-                        f.addMapEntry(factory2, distance);
-                    }
-                }
-                
-		    } 
-		    
-		    //if this Factory (ID = factory1) does not exist
-		    if(!c){
-				//create the Factory and add the entry
-		        Factory newFactory = new Factory(factory1);
-		        if(manager.getFactoryByID(factory2)==null){
-		            Factory newFactory2 = new Factory(factory2);
-		            newFactory2.addMapEntry(factory1, distance);
-		            manager.addFactory(newFactory2);
-		        
-		        }
-				newFactory.addMapEntry(factory2, distance);
-                manager.addFactory(newFactory);
-		    }
+            if(manager.getFactoryByID(factory1) == null){
+                Factory newFactory3 = new Factory(factory1);
+				newFactory3.addMapEntry(factory2, distance);
+			    manager.addFactory(newFactory3);
+            }
+            else if(manager.getFactoryByID(factory1) != null && manager.getFactoryByID(factory1).getDistances().get(factory2) == null){
+                manager.getFactoryByID(factory1).addMapEntry(factory2, distance);
+            }
+				
+			if(manager.getFactoryByID(factory2) == null){
+				Factory newFactory4 = new Factory(factory2);
+				newFactory4.addMapEntry(factory1, distance);
+				manager.addFactory(newFactory4);
+			}
+			else if(manager.getFactoryByID(factory2) != null && manager.getFactoryByID(factory2).getDistances().get(factory1) == null){
+			    manager.getFactoryByID(factory2).addMapEntry(factory1, distance);
+			}
         }
         
         //fill in entries
@@ -75,6 +61,12 @@ class Player {
 			    }
             }
 		}
+		
+		String kk = "";
+		for(Factory f : manager.getFactories()){
+		    kk += f.getID()+" ";
+		}
+		//System.out.println(kk);
         
 
         // game loop
@@ -168,9 +160,9 @@ class FactoryManager{
 		return t;
 	}
 	
+	//returns null if the factory does not exist
 	public Factory getFactoryByID(Integer i){
 	    for(Factory f : factories){
-			//gives priority to the controlled Factory with the most cyborgs
 			if(f.getID() == i){
 				return f;
 			}
@@ -195,6 +187,16 @@ class FactoryManager{
 			if(f.getC() == 0){
 				neutralIDs.add(f.getID());
 				neutrals++;
+			}
+		}
+        
+        //count how many enemy bases and store their ID
+        Integer enemies = 0;
+		ArrayList<Integer> enemyIDs = new ArrayList<Integer>();
+		for(Factory f : factories){
+			if(f.getC() == 0){
+				enemyIDs.add(f.getID());
+				enemies++;
 			}
 		}
 		
