@@ -170,8 +170,24 @@ class FactoryManager{
 	    return null;
 	}
 	
-	
-	
+	//returns the closest enemy factory (ID) from the given Factory
+	public Integer getClosestEnemyFactory(Factory c){
+	    Integer dist = -1;
+	    Integer closest = -1;
+	    for (Map.Entry<Integer, Integer> entry : c.getDistances().entrySet()){
+	        Factory f = getFactoryByID(entry.getKey());
+	        if(dist == -1 && f.getC() == -1){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	        else if(f.getC() == -1 && c.distanceTo(f)<dist){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	    }
+	    return closest;
+	}
+	        
 	public void Action(){
 	    String command = "";
 		
@@ -267,7 +283,7 @@ class FactoryManager{
 			        command+= "MOVE " + temp.getID() + " " + i + " " + "2"+";";
 		        }
 		        for(Integer i : neutralIDs){
-			        command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
+			        command+= "MOVE " + temp.getID() + " " + i + " " + "2"+";";
 		        }
 			}
 			
