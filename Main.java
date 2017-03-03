@@ -23,10 +23,10 @@ class Player {
             if(manager.getFactories().size() == 0){
 				//create first 2 Factories and add the entries
 				Factory newFactory = new Factory(factory1);
-				newFactory.addMapEntry(factory2, distance);
+				newFactory.addMapEntry(factory2, new Info(distance, 0));
 				
 				Factory newFactory2 = new Factory(factory2);
-				newFactory2.addMapEntry(factory1, distance);
+				newFactory2.addMapEntry(factory1, new Info(distance, 0));
 				
                 manager.addFactory(newFactory);   
                 manager.addFactory(newFactory2);
@@ -34,29 +34,29 @@ class Player {
             
             if(manager.getFactoryByID(factory1) == null){
                 Factory newFactory3 = new Factory(factory1);
-				newFactory3.addMapEntry(factory2, distance);
+				newFactory3.addMapEntry(factory2, new Info(distance, 0));
 			    manager.addFactory(newFactory3);
             }
             else if(manager.getFactoryByID(factory1) != null && manager.getFactoryByID(factory1).getDistances().get(factory2) == null){
-                manager.getFactoryByID(factory1).addMapEntry(factory2, distance);
+                manager.getFactoryByID(factory1).addMapEntry(factory2, new Info(distance, 0));
             }
 				
 			if(manager.getFactoryByID(factory2) == null){
 				Factory newFactory4 = new Factory(factory2);
-				newFactory4.addMapEntry(factory1, distance);
+				newFactory4.addMapEntry(factory1, new Info(distance, 0));
 				manager.addFactory(newFactory4);
 			}
 			else if(manager.getFactoryByID(factory2) != null && manager.getFactoryByID(factory2).getDistances().get(factory1) == null){
-			    manager.getFactoryByID(factory2).addMapEntry(factory1, distance);
+			    manager.getFactoryByID(factory2).addMapEntry(factory1, new Info(distance, 0));
 			}
         }
         
         //fill in entries
         for(Factory f: manager.getFactories()){
-            for (Map.Entry<Integer, Integer> entry : f.getDistances().entrySet()){
+            for (Map.Entry<Integer, Info> entry : f.getDistances().entrySet()){
 			    for(Factory fp: manager.getFactories()){
 			        if(fp.getID() == entry.getKey()){
-			            fp.addMapEntry(f.getID(), entry.getValue());
+			            fp.addMapEntry(f.getID(), new Info(entry.getValue().getDistance(), 0));
 			        }
 			    }
             }
@@ -99,7 +99,13 @@ class Player {
 				    manager.addTroop(t);
 				}
 				    
-                
+                //fill in production values for each individual Factory object's Map
+                for(Factory f : manager.getFactories()){
+                     for (Map.Entry<Integer, Info> entry : f.getDistances().entrySet()){
+                         Factory currentMapFactory = manager.getFactoryByID(entry.getKey());
+                         f.getDistances().put(entry.getKey(), new Info(entry.getValue().getDistance(), currentMapFactory.getProduction()));
+                     }
+                }
                 
             }
             String test = "";
@@ -174,7 +180,7 @@ class FactoryManager{
 	public Integer getClosestEnemyFactory(Factory c){
 	    Integer dist = -1;
 	    Integer closest = -1;
-	    for (Map.Entry<Integer, Integer> entry : c.getDistances().entrySet()){
+	    for (Map.Entry<Integer, Info> entry : c.getDistances().entrySet()){
 	        Factory f = getFactoryByID(entry.getKey());
 	        if(dist == -1 && f.getC() == -1){
 	            dist = c.distanceTo(f);
@@ -324,7 +330,7 @@ class Factory{
 	private Integer cyborg_count;
 	private Integer production;
 	
-	private Map<Integer, Integer> distances;
+	private Map<Integer, Info> distances;
 	
 	private Integer ID;
 	
@@ -334,7 +340,7 @@ class Factory{
 		cyborg_count = cc;
 		production = p;
 		ID = i;
-		distances = new HashMap<Integer, Integer>();
+		distances = new HashMap<Integer, Info>();
 	}
 	
 	public Factory(Integer i){
@@ -343,7 +349,7 @@ class Factory{
 		cyborg_count = null;
 		production = null;
 		ID = i;
-		distances = new HashMap<Integer, Integer>();
+		distances = new HashMap<Integer, Info>();
 	}
 	
 	public Factory(){
@@ -352,7 +358,7 @@ class Factory{
 		cyborg_count = null;
 		production = null;
 		ID = null;
-		distances = new HashMap<Integer, Integer>();
+		distances = new HashMap<Integer, Info>();
 	}
 	
 	public void setCFD(Integer d){
@@ -391,24 +397,24 @@ class Factory{
 		return ID;
 	}
 	
-	public Map<Integer, Integer> getDistances(){
+	public Map<Integer, Info> getDistances(){
 		return distances;
 	}
 	
-	public void addMapEntry(Integer i, Integer d){
+	public void addMapEntry(Integer i, Info d){
 		distances.put(i, d);
 	}
 	
 	public Integer getClosestFactory(){
 	    Integer dist = -1;
 	    Integer closest = -1;
-	    for (Map.Entry<Integer, Integer> entry : distances.entrySet()){
+	    for (Map.Entry<Integer, Info> entry : distances.entrySet()){
 	        if(dist == -1){
-			    dist = entry.getValue();
+			    dist = entry.getValue().getDistance();
 			    closest = entry.getKey();
 	        }
-	        else if(entry.getValue() < dist){
-	            dist = entry.getValue();
+	        else if(entry.getValue().getDistance() < dist){
+	            dist = entry.getValue().getDistance();
 	            closest = entry.getKey();
 	        }
 		}
@@ -419,13 +425,13 @@ class Factory{
 	public Integer getClosestFactory(Integer i){
 	    Integer dist = -1;
 	    Integer closest = -1;
-	    for (Map.Entry<Integer, Integer> entry : distances.entrySet()){
+	    for (Map.Entry<Integer, Info> entry : distances.entrySet()){
 	        if(dist == -1 && entry.getKey()!= i){
-			    dist = entry.getValue();
+			    dist = entry.getValue().getDistance();
 			    closest = entry.getKey();
 	        }
-	        else if(entry.getValue() < dist && entry.getKey()!= i){
-	            dist = entry.getValue();
+	        else if(entry.getValue().getDistance() < dist && entry.getKey()!= i){
+	            dist = entry.getValue().getDistance();
 	            closest = entry.getKey();
 	        }
 		}
@@ -433,9 +439,9 @@ class Factory{
 	}	
 	
 	public Integer distanceTo(Factory f){
-		for (Map.Entry<Integer, Integer> entry : distances.entrySet()){
+		for (Map.Entry<Integer, Info> entry : distances.entrySet()){
 			if(entry.getKey() == f.getID()){
-				return entry.getValue();
+				return entry.getValue().getDistance();
 			}
 		}
 	    return null;
@@ -479,3 +485,22 @@ class Troop{
         return arrivalTime;
     }
 }
+
+class Info{
+    private Integer distance;
+    private Integer production;
+    
+    public Info(Integer d, Integer p){
+        distance = d;
+        production = p;
+    }
+    
+    public Integer getDistance(){
+        return distance;
+    }
+    
+    public Integer getProduction(){
+        return production;
+    }
+    
+}  
