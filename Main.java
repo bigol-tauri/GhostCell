@@ -174,8 +174,6 @@ class FactoryManager{
 	
 	public void Action(){
 	    String command = "";
-	    
-	    command+="MSG "+factories.size()+";";
 		
 		//select best Factory to send troops from
 		Factory temp = selectTEMP();
@@ -226,7 +224,7 @@ class FactoryManager{
 ////////CASE 1: all bases except 2 are neutral (beginning), no Cyborgs in transit
 			//send 3 cyborgs to the nearest two bases until it is under our control
 			//send 1 cyborg all the other factories
-		if(neutrals == factoryCount-3 && ourTroops==0){
+		if(neutrals == factoryCount-2 && ourTroops==0){
 			command += "MSG case 1, id="+temp.getID()+";";
 			
 			//send 3 to each
