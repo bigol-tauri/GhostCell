@@ -192,7 +192,7 @@ class FactoryManager{
         Integer enemies = 0;
 		ArrayList<Integer> enemyIDs = new ArrayList<Integer>();
 		for(Factory f : factories){
-			if(f.getC() == 0){
+			if(f.getC() == -1){
 				enemyIDs.add(f.getID());
 				enemies++;
 			}
@@ -245,11 +245,11 @@ class FactoryManager{
 			command+= "WAIT;";
 		}
 		
-//////////CASE 3: Cyborgs we control are in transit, temp is 3 or more
-            //if there are three cyborgs available send 2 to the closest and 1 to the next closest
-            //if there are four cyborgs available send 2 to the closest and 2 to the next closest
-            //if there are five or more cyborgs send 2 to the 2 closest and 1 or more to all neutrals
-		if(ourTroops>0 && temp.getCC()>=2){
+//////////CASE 3: temp is 3 or more
+           
+           
+          
+		if(temp.getCC()>=2){
 		    temp = selectTEMP();
 		    command += "MSG case 3, id="+temp.getID()+";";
 			if(temp.getCC()<=3){
@@ -263,8 +263,11 @@ class FactoryManager{
 			if(temp.getCC()>4){
 			    command+= "MOVE " + temp.getID() + " " + closest1 + " " + "2"+";";
 			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "2"+";";
-			    for(Integer i : neutralIDs){
-			        command+= "MOVE " + temp.getID() + " " + i + " " + "3"+";";
+			    for(Integer i : enemyIDs){
+			        command+= "MOVE " + temp.getID() + " " + i + " " + "2"+";";
+		        }
+		        for(Integer i : neutralIDs){
+			        command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
 		        }
 			}
 			
