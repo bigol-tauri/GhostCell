@@ -8,6 +8,7 @@ class Player {
 
     public static void main(String args[]) {
         
+        //String command = "";
         Scanner in = new Scanner(System.in);
         Integer factoryCount = in.nextInt(); // the number of factories
         FactoryManager manager = new FactoryManager(factoryCount); // main manager
@@ -212,9 +213,59 @@ class FactoryManager{
 	    }
 	    return closest;
 	}
-	        
+	
+	public String CASE1(Factory f,ArrayList<Integer> enemyIDs_, Integer best1_, Integer best2_){
+	    String AddedCommand = "";
+	    AddedCommand += "MSG case 1, id="+f.getID()+";";
+			
+		if(f.getCC() > 16){
+		    AddedCommand += "INC "+f.getID()+";";
+		}
+		//send bomb to enemy's intial base
+		AddedCommand += "BOMB " + f.getID()+ " "+ enemyIDs_.get(0) + ";";
+
+		//send 3 to each
+		AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + "3"+";";
+		AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + "3"+";";
+		
+		return AddedCommand;
+		
+	}
+	
+	public String CASE2(Factory f){
+	    String AddedCommand = "";
+		AddedCommand+= "WAIT;";
+		return AddedCommand;
+	}
+	
+	public String CASE3(Factory f, Integer best1_, Integer best2_){
+	    String AddedCommand = "";          
+	    AddedCommand += "MSG case 3, id="+f.getID()+";";
+	    AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + "2"+";";
+	    AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + "1"+";";
+	    return AddedCommand;
+	}
+	
+	public String CASE4(Factory f, Integer best1_, Integer best2_){
+	    String AddedCommand = "";
+	    AddedCommand += "MSG case 4, id="+f.getID()+";";
+	    AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + "2"+";";
+	    AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + "2"+";";
+	    return AddedCommand;
+	}      
+
+    public String CASE5(Factory f, Integer best1_, Integer best2_){
+        String AddedCommand = "";
+        AddedCommand += "MSG case 5, id="+f.getID()+";";
+        Integer val = f.getCC();
+        AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + (val/2) +";";
+	    AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + (val/2) +";";
+	    return AddedCommand;
+    }
+	
 	public void Action(){
 	    String command = "";
+	    
 		
 		//select best Factory to send troops from
 		Factory temp = selectTEMP();
@@ -257,124 +308,54 @@ class FactoryManager{
 		    }
 		}
 		
-		//get two closest factories for use in cases
-		Integer closest1 = temp.getClosestFactory();
-		Integer closest2 = temp.getClosestFactory(closest1); //finds next closest factory
 		
-		//get two best factories for use in cases
-		Integer best1 = temp.getBestFactory();
-		Integer best2 = temp.getBestFactory(best1); //finds second best factory
 		
-////////CASE 1: all bases except 2 are neutral (beginning), no Cyborgs in transit
-            //increase production if base has more than 16 cyborgs to begin with
-			//send 3 cyborgs to the nearest two bases until it is under our control
-			//send 1 cyborg all the other factories
-		if(neutrals == factoryCount-2 && ourTroops==0){
-		    
-			command += "MSG case 1, id="+temp.getID()+";";
-			
-			if(temp.getCC() > 16){
-			    command += "INC "+temp.getID()+";";
-			}
-			
-			//send bomb to enemy's intial base
-			command += "BOMB " + temp.getID()+ " "+ enemyIDs.get(0) + ";";
-			
-			
-			//send 3 to each
-			command+= "MOVE " + temp.getID() + " " + best1 + " " + "3"+";";
-			command+= "MOVE " + temp.getID() + " " + best2 + " " + "3"+";";
-			
-			//send 1 to rest
-			for(Integer i : neutralIDs){
-			    command+= "MOVE " + temp.getID() + " " + i + " " + "1"+";";
-		    }
-		}
 		
-			
-////////CASE 2: Cyborgs we control are in transit, temp is 2 or less
-		    //WAIT
-		if(ourTroops>0 && temp.getCC()<=2){
-		    command += "MSG case 2, id="+temp.getID()+";";
-			command+= "WAIT;";
-		}
-		
-//////////CASE 3: temp is 3 or more
-           
-           
-          
-		if(temp.getCC()>2){
-		    temp = selectTEMP();
-		    command += "MSG case 3, id="+temp.getID()+";";
-			if(temp.getCC()<=3){
-			    command+= "MOVE " + temp.getID() + " " + closest1 + " " + "2"+";";
-			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "1"+";";
-			}
-			if(temp.getCC()==4){
-			    command+= "MOVE " + temp.getID() + " " + best1 + " " + "2"+";";
-			    command+= "MOVE " + temp.getID() + " " + best2 + " " + "2"+";";
-			}
-			if(temp.getCC()>4){
-			    command+= "MOVE " + temp.getID() + " " + best1 + " " + "3"+";";
-			    command+= "MOVE " + temp.getID() + " " + best2 + " " + "3"+";";
-			    for(Integer i : enemyIDs){
-			        command+= "MOVE " + temp.getID() + " " + i + " " + "3"+";";
-		        }
-		        for(Integer i : neutralIDs){
-			        command+= "MOVE " + temp.getID() + " " + i + " " + "3"+";";
-		        }
-		        
-    		        for(int i = 0; i<controlledIDs.size(); i++){
-    			    Factory c = getFactoryByID(controlledIDs.get(i));
-    			    Integer _closest1 = c.getClosestFactory();
-    	        	Integer _closest2 = c.getClosestFactory(_closest1); //finds next closest factory
-    			    
-    			    command+= "MOVE " + c.getID() + " " + _closest1 + " " + "2"+";";
-    			    command+= "MOVE " + c.getID() + " " + _closest2 + " " + "2"+";";
-			    }
-			}
-			
-			
-			
-		}
-		
-/////////supplemental CASE A:Controlled factory has production value of 0
-        //Finds closest ally factory and sends all cyborgs
-        for (Integer i : controlledIDs) {
-            if (getFactoryByID(i).getProduction() == 0) {
-                Integer c = getFactoryByID(i).getCC();
-                c = Math.abs(c - 2);
-                if (getClosestEnemyFactory(getFactoryByID(i)) != -1) {
-                    command+= "MOVE " + getFactoryByID(i).getID() + " " + getClosestEnemyFactory(getFactoryByID(i)) + " " + c + ";";
-                }
-            }
-            
-	    }
-/////////supplemental CASE B: Controlled factory has a production value of <3 and holds 11 or more cyborgs
-		for(Integer i : controlledIDs) {
-		    if(getFactoryByID(i).getProduction() < 3 && getFactoryByID(i).getCC() >= 11){
+        //for each controlled factory, select the right case
+	    for(int i = 0; i<controlledIDs.size(); i++){
+	        
+	        Factory c = getFactoryByID(controlledIDs.get(i));
+	        
+	        //get two closest factories for use in cases
+    		Integer closest1 = c.getClosestFactory();
+    		Integer closest2 = c.getClosestFactory(closest1); //finds next closest factory
+    		
+    		//get two best factories for use in cases
+    		Integer best1 = c.getBestFactory();
+    		Integer best2 = c.getBestFactory(best1); //finds second best factory
+    		
+    		
+    		//inc if possible
+    		if(getFactoryByID(i).getProduction() < 3 && getFactoryByID(i).getCC() >= 11){
 		        if(command.indexOf("INC "+i+";") == -1){
 		            command += "INC "+i+";";
 		        }
 		    }
-		}
-		
-		
+	        
+	        if(neutrals == factoryCount-2 && ourTroops==0){
+    	        command += CASE1(c, enemyIDs, best1, best2);
+    	    }
+            else if(ourTroops>0 && temp.getCC()<=2){
+    	        command += CASE2(c);
+            }
+    		else if(c.getCC()==3){
+    		    command += CASE3(c, best1, best2);
+    		}
+    		else if(c.getCC()==4){
+    		    command += CASE4(c, best1, best2);
+    		}
+    		else if(c.getCC()>=5){
+    		    command += CASE5(c, best1, best2);
+    		}         
+	    }
 		
 		//END OF GAME CASE DON'T CHANGE
 		if(command.length() == 0){
 		    command += "WAIT;";
 		}
 		
-
-		
-		
-		
-		System.out.println(command.substring(0, command.length()-1));
-		
-		
+		System.out.println(command.substring(0, command.length()-1));	
 	}
-
 }
 
 
