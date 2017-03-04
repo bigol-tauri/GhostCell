@@ -1,6 +1,7 @@
 import java.util.*;
 import java.io.*;
 import java.math.*;
+import java.lang.Math;
 
 
 class Player {
@@ -193,6 +194,24 @@ class FactoryManager{
 	    }
 	    return closest;
 	}
+	
+	//returns the closest ally factory (ID) from the given Factory
+	public Integer getClosestAllyFactory(Factory c){
+	    Integer dist = -1;
+	    Integer closest = -1;
+	    for (Map.Entry<Integer, Info> entry : c.getDistances().entrySet()){
+	        Factory f = getFactoryByID(entry.getKey());
+	        if(dist == -1 && f.getC() == 1){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	        else if(f.getC() == 1 && c.distanceTo(f)<dist){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	    }
+	    return closest;
+	}
 	        
 	public void Action(){
 	    String command = "";
@@ -308,6 +327,19 @@ class FactoryManager{
 			
 			
 		}
+		
+/////////CASE 4:Controlled factory has production value of 0
+        //Finds closest ally factory and sends all cyborgs
+        for (Integer i : controlledIDs) {
+            if (getFactoryByID(i).getProduction() == 0) {
+                Integer c = getFactoryByID(i).getCC();
+                c = Math.abs(c - 2);
+                if (getClosestEnemyFactory(getFactoryByID(i)) != -1) {
+                    command+= "MSG case 4, id=" + getFactoryByID(i).getID() + ";";
+                    command+= "MOVE " + getFactoryByID(i).getID() + " " + getClosestEnemyFactory(getFactoryByID(i)) + " " + c + ";";
+                    }
+                }
+            }
 		
 		
 		
