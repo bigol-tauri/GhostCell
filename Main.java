@@ -124,6 +124,7 @@ class FactoryManager{
 	private ArrayList<Factory> factories;
 	private ArrayList<Troop> troops;
 	private Integer factoryCount;
+	Integer turnCount = 0;
 	
 	public FactoryManager(){
 		factories = new ArrayList<Factory>();
@@ -214,6 +215,24 @@ class FactoryManager{
 	    return closest;
 	}
 	
+	//returns the closest neutral factory (ID) from the given Factory
+	public Integer getClosestNeutralFactory(Factory c){
+	    Integer dist = -1;
+	    Integer closest = -1;
+	    for (Map.Entry<Integer, Info> entry : c.getDistances().entrySet()){
+	        Factory f = getFactoryByID(entry.getKey());
+	        if(dist == -1 && f.getC() == 0){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	        else if(f.getC() == 0 && c.distanceTo(f)<dist){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	    }
+	    return closest;
+	}
+	
 	public String CASE1(Factory f,ArrayList<Integer> enemyIDs_, Integer best1_, Integer best2_){
 	    String AddedCommand = "";
 	    AddedCommand += "MSG case 1, id="+f.getID()+";";
@@ -225,8 +244,7 @@ class FactoryManager{
 		AddedCommand += "BOMB " + f.getID()+ " "+ enemyIDs_.get(0) + ";";
 
 		//send 3 to each
-		AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + "3"+";";
-		AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + "3"+";";
+		AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + "5"+";";
 		
 		return AddedCommand;
 		
@@ -256,16 +274,21 @@ class FactoryManager{
 
     public String CASE5(Factory f, Integer best1_, Integer best2_, ArrayList<Integer> enemyIDs_, ArrayList<Integer> neutralIDs_){
         String AddedCommand = "";
-        AddedCommand += "MSG case 5, id="+f.getID()+";";
-        Integer val = f.getCC();
+        //AddedCommand += "MSG case 5, id="+f.getID()+";";
+        Integer value = f.getCC();
+        double val = (double) value;
         
-        Integer sendToBest1 = Math.floor(val * 0.25);
-        Integer sendToBest2 = Math.floor(val * 0.25);
+        double sTB1 = val * 0.3;
+        double sTB2 = val * 0.25;
+        
+        int sendToBest1 = (int) sTB1;
+        int sendToBest2 = (int) sTB2;
         
         AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + sendToBest1 +";";
 	    AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + sendToBest2 +";";
 	    
-	    Integer sendToNeutrals = val - (2*sendToBest1);
+	    double sTN = val - (2*sendToBest1);
+	    int sendToNeutrals = (int) sTN;
 	    
 	    
 	    
@@ -274,6 +297,8 @@ class FactoryManager{
 	
 	public void Action(){
 	    String command = "";
+	    turnCount+= 2;
+        Integer Csent = 0;
 		
 		//count how many neutral bases and store their ID
 		Integer neutrals = 0;
@@ -328,28 +353,51 @@ class FactoryManager{
     		
     		
     		//inc if possible
-    		if(getFactoryByID(i).getProduction() < 3 && getFactoryByID(i).getCC() >= 11){
+    		if(getFactoryByID(i).getProduction() < 3 && getFactoryByID(i).getCC() >= 11 && getFactoryByID(i).getC() == 1){
 		        if(command.indexOf("INC "+i+";") == -1){
 		            command += "INC "+i+";";
 		        }
 		    }
-	        
-	        if(neutrals == factoryCount-2 && ourTroops==0){
-    	        command += CASE1(c, enemyIDs, best1, best2);
-    	    }
-            else if(ourTroops>0 && temp.getCC()<=2){
-    	        command += CASE2(c);
-            }
-    		else if(c.getCC()==3){
-    		    command += CASE3(c, best1, best2);
-    		}
-    		else if(c.getCC()==4){
-    		    command += CASE4(c, best1, best2);
-    		}
-    		else if(c.getCC()>=5){
-    		    command += CASE5(c, best1, best2, enemyIDs, neutralIDs);
-    		}         
-	    }
+	        command+="MSG " + turnCount + ";";
+	        if (turnCount < 20) {
+	            if(neutrals == factoryCount-2 && ourTroops==0){    //beginning of game
+    	            command += CASE1(c, enemyIDs, best1, best2);
+    	        }
+                else if(ourTroops>0 && c.getCC()<=2){           //c <= 2
+    	            command += CASE2(c);
+                }
+    		    else if(c.getCC()==3){                             //c == 3
+    		        command += CASE3(c, best1, best2);
+    		    }
+    		    else if(c.getCC()==4){
+    		        command += CASE4(c, best1, best2);             //c == 4 
+    		    }
+    		    else if(c.getCC()>=5){                             //c <= 5
+    		        command += CASE5(c, best1, best2, enemyIDs, neutralIDs);
+    		    }
+	        }
+	       else {
+	           boolean noGoodN = true;
+	            //check to see if there are any neutral factories 
+	            //with 1 production or more that we missed
+	           for (Integer n : neutralIDs) {
+	               if (getFactoryByID(n).getProduction() != 0) {
+	                       noGoodN = false;
+	                   }
+	           }
+	           //if there are, find the closest ally factory and have it send exactly the right amount to it
+	           if (!noGoodN){
+	               for (Integer b : neutralIDs) {
+	                   if (getFactoryByID(b).getProduction() != 0) {
+	                       Integer s = getFactoryByID(b).getCC();
+	                       s += 1;
+	                        command+="MOVE " + getClosestAllyFactory(getFactoryByID(b)) + " " + b + " " + s + ";";
+	                   }
+	               }
+	           }
+	           //begin stage 2 cases
+	       }
+	   }
 		
 		//END OF GAME CASE DON'T CHANGE
 		if(command.length() == 0){
