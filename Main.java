@@ -254,21 +254,26 @@ class FactoryManager{
 	    return AddedCommand;
 	}      
 
-    public String CASE5(Factory f, Integer best1_, Integer best2_){
+    public String CASE5(Factory f, Integer best1_, Integer best2_, ArrayList<Integer> enemyIDs_, ArrayList<Integer> neutralIDs_){
         String AddedCommand = "";
         AddedCommand += "MSG case 5, id="+f.getID()+";";
         Integer val = f.getCC();
-        AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + (val/2) +";";
-	    AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + (val/2) +";";
+        
+        Integer sendToBest1 = Math.floor(val * 0.25);
+        Integer sendToBest2 = Math.floor(val * 0.25);
+        
+        AddedCommand+= "MOVE " + f.getID() + " " + best1_ + " " + sendToBest1 +";";
+	    AddedCommand+= "MOVE " + f.getID() + " " + best2_ + " " + sendToBest2 +";";
+	    
+	    Integer sendToNeutrals = val - (2*sendToBest1);
+	    
+	    
+	    
 	    return AddedCommand;
     }
 	
 	public void Action(){
 	    String command = "";
-	    
-		
-		//select best Factory to send troops from
-		Factory temp = selectTEMP();
 		
 		//count how many neutral bases and store their ID
 		Integer neutrals = 0;
@@ -308,9 +313,6 @@ class FactoryManager{
 		    }
 		}
 		
-		
-		
-		
         //for each controlled factory, select the right case
 	    for(int i = 0; i<controlledIDs.size(); i++){
 	        
@@ -345,7 +347,7 @@ class FactoryManager{
     		    command += CASE4(c, best1, best2);
     		}
     		else if(c.getCC()>=5){
-    		    command += CASE5(c, best1, best2);
+    		    command += CASE5(c, best1, best2, enemyIDs, neutralIDs);
     		}         
 	    }
 		
