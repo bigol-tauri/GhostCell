@@ -1,6 +1,7 @@
 import java.util.*;
 import java.io.*;
 import java.math.*;
+import java.lang.Math;
 
 
 class Player {
@@ -193,6 +194,24 @@ class FactoryManager{
 	    }
 	    return closest;
 	}
+	
+	//returns the closest ally factory (ID) from the given Factory
+	public Integer getClosestAllyFactory(Factory c){
+	    Integer dist = -1;
+	    Integer closest = -1;
+	    for (Map.Entry<Integer, Info> entry : c.getDistances().entrySet()){
+	        Factory f = getFactoryByID(entry.getKey());
+	        if(dist == -1 && f.getC() == 1){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	        else if(f.getC() == 1 && c.distanceTo(f)<dist){
+	            dist = c.distanceTo(f);
+	            closest = f.getID();
+	        }
+	    }
+	    return closest;
+	}
 	        
 	public void Action(){
 	    String command = "";
@@ -247,10 +266,17 @@ class FactoryManager{
 		Integer best2 = temp.getBestFactory(best1); //finds second best factory
 		
 ////////CASE 1: all bases except 2 are neutral (beginning), no Cyborgs in transit
+            //increase production if base has more than 16 cyborgs to begin with
 			//send 3 cyborgs to the nearest two bases until it is under our control
 			//send 1 cyborg all the other factories
 		if(neutrals == factoryCount-2 && ourTroops==0){
+		    
 			command += "MSG case 1, id="+temp.getID()+";";
+			
+			if(temp.getCC() > 16){
+			    command += "INC "+temp.getID()+";";
+			}
+			
 			
 			//send 3 to each
 			command+= "MOVE " + temp.getID() + " " + best1 + " " + "3"+";";
@@ -289,10 +315,10 @@ class FactoryManager{
 			    command+= "MOVE " + temp.getID() + " " + best1 + " " + "3"+";";
 			    command+= "MOVE " + temp.getID() + " " + best2 + " " + "3"+";";
 			    for(Integer i : enemyIDs){
-			        command+= "MOVE " + temp.getID() + " " + i + " " + "2"+";";
+			        command+= "MOVE " + temp.getID() + " " + i + " " + "3"+";";
 		        }
 		        for(Integer i : neutralIDs){
-			        command+= "MOVE " + temp.getID() + " " + i + " " + "2"+";";
+			        command+= "MOVE " + temp.getID() + " " + i + " " + "3"+";";
 		        }
 		        
     		        for(int i = 0; i<controlledIDs.size(); i++){
@@ -309,6 +335,26 @@ class FactoryManager{
 			
 		}
 		
+/////////supplemental CASE A:Controlled factory has production value of 0
+        //Finds closest ally factory and sends all cyborgs
+        for (Integer i : controlledIDs) {
+            if (getFactoryByID(i).getProduction() == 0) {
+                Integer c = getFactoryByID(i).getCC();
+                c = Math.abs(c - 2);
+                if (getClosestEnemyFactory(getFactoryByID(i)) != -1) {
+                    command+= "MOVE " + getFactoryByID(i).getID() + " " + getClosestEnemyFactory(getFactoryByID(i)) + " " + c + ";";
+                }
+            }
+            
+	    }
+/////////supplemental CASE B: Controlled factory has a production value of <3 and holds 11 or more cyborgs
+		for(Integer i : controlledIDs) {
+		    if(getFactoryByID(i).getProduction() < 3 && getFactoryByID(i).getCC() >= 11){
+		        if(command.indexOf("INC "+i+";")== -1){
+		            command += "INC "+i+";";
+		        }
+		    }
+		}
 		
 		
 		
@@ -451,11 +497,11 @@ class Factory{
 	        if(best== -1){
 	            best = entry.getKey();
 	            //weighing formula is here
-	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance();
+	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 1.5) / entry.getValue().getDistance();
 	        }
-	        else if((1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance()) > score){
+	        else if((1.0 * Math.pow(entry.getValue().getProduction(), 1.5) / entry.getValue().getDistance()) > score){
 	            best = entry.getKey();
-	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance();
+	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 1.5) / entry.getValue().getDistance();
 	        }
 	    }
 	    return best;
