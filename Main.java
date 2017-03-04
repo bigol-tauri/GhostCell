@@ -242,6 +242,9 @@ class FactoryManager{
 		Integer closest1 = temp.getClosestFactory();
 		Integer closest2 = temp.getClosestFactory(closest1); //finds next closest factory
 		
+		//get two best factories for use in cases
+		Integer best1 = temp.getBestFactory();
+		Integer best2 = temp.getBestFactory(best1); //finds second best factory
 		
 ////////CASE 1: all bases except 2 are neutral (beginning), no Cyborgs in transit
 			//send 3 cyborgs to the nearest two bases until it is under our control
@@ -250,8 +253,8 @@ class FactoryManager{
 			command += "MSG case 1, id="+temp.getID()+";";
 			
 			//send 3 to each
-			command+= "MOVE " + temp.getID() + " " + closest1 + " " + "3"+";";
-			command+= "MOVE " + temp.getID() + " " + closest2 + " " + "3"+";";
+			command+= "MOVE " + temp.getID() + " " + best1 + " " + "3"+";";
+			command+= "MOVE " + temp.getID() + " " + best2 + " " + "3"+";";
 			
 			//send 1 to rest
 			for(Integer i : neutralIDs){
@@ -279,28 +282,30 @@ class FactoryManager{
 			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "1"+";";
 			}
 			if(temp.getCC()==4){
-			    command+= "MOVE " + temp.getID() + " " + closest1 + " " + "2"+";";
-			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "2"+";";
+			    command+= "MOVE " + temp.getID() + " " + best1 + " " + "2"+";";
+			    command+= "MOVE " + temp.getID() + " " + best2 + " " + "2"+";";
 			}
 			if(temp.getCC()>4){
-			    command+= "MOVE " + temp.getID() + " " + closest1 + " " + "2"+";";
-			    command+= "MOVE " + temp.getID() + " " + closest2 + " " + "2"+";";
+			    command+= "MOVE " + temp.getID() + " " + best1 + " " + "3"+";";
+			    command+= "MOVE " + temp.getID() + " " + best2 + " " + "3"+";";
 			    for(Integer i : enemyIDs){
 			        command+= "MOVE " + temp.getID() + " " + i + " " + "2"+";";
 		        }
 		        for(Integer i : neutralIDs){
 			        command+= "MOVE " + temp.getID() + " " + i + " " + "2"+";";
 		        }
+		        
+    		        for(int i = 0; i<controlledIDs.size(); i++){
+    			    Factory c = getFactoryByID(controlledIDs.get(i));
+    			    Integer _closest1 = c.getClosestFactory();
+    	        	Integer _closest2 = c.getClosestFactory(_closest1); //finds next closest factory
+    			    
+    			    command+= "MOVE " + c.getID() + " " + _closest1 + " " + "2"+";";
+    			    command+= "MOVE " + c.getID() + " " + _closest2 + " " + "2"+";";
+			    }
 			}
 			
-			for(int i = 0; i<controlledIDs.size(); i++){
-			    Factory c = getFactoryByID(controlledIDs.get(i));
-			    Integer _closest1 = c.getClosestFactory();
-	        	Integer _closest2 = c.getClosestFactory(_closest1); //finds next closest factory
-			    
-			    command+= "MOVE " + c.getID() + " " + _closest1 + " " + "3"+";";
-			    command+= "MOVE " + c.getID() + " " + _closest2 + " " + "3"+";";
-			}
+			
 			
 		}
 		
@@ -437,6 +442,43 @@ class Factory{
 		}
 		return closest;
 	}	
+	
+	//find best factory in terms of distance and production
+	public Integer getBestFactory(){
+	    double score = 0;
+	    Integer best = -1;
+	    for (Map.Entry<Integer, Info> entry : distances.entrySet()){
+	        if(best== -1){
+	            best = entry.getKey();
+	            //weighing formula is here
+	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance();
+	        }
+	        else if((1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance()) > score){
+	            best = entry.getKey();
+	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance();
+	        }
+	    }
+	    return best;
+	}
+	
+	//find best factory in terms of distance and production
+	public Integer getBestFactory(Integer i){
+	    double score = 0;
+	    Integer best = -1;
+	    for (Map.Entry<Integer, Info> entry : distances.entrySet()){
+	        if(best== -1 && entry.getKey()!= i){
+	            best = entry.getKey();
+	            //weighing formula is here
+	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance();
+	        }
+	        else if((1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance()) > score && entry.getKey()!= i){
+	            best = entry.getKey();
+	            score = 1.0 * Math.pow(entry.getValue().getProduction(), 2) / entry.getValue().getDistance();
+	        }
+	    }
+	    return best;
+	}
+	        
 	
 	public Integer distanceTo(Factory f){
 		for (Map.Entry<Integer, Info> entry : distances.entrySet()){
