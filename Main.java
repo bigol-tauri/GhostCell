@@ -335,13 +335,18 @@ class FactoryManager{
 			
 		}
 		
+<<<<<<< HEAD
 /////////supplemental CASE A:Controlled factory has production value of 0
+=======
+/////////CASE 4:Controlled factory has production value of 0
+>>>>>>> 3ead5e726edbe6b15c44bd99928b09cced9c65f8
         //Finds closest ally factory and sends all cyborgs
         for (Integer i : controlledIDs) {
             if (getFactoryByID(i).getProduction() == 0) {
                 Integer c = getFactoryByID(i).getCC();
                 c = Math.abs(c - 2);
                 if (getClosestEnemyFactory(getFactoryByID(i)) != -1) {
+<<<<<<< HEAD
                     command+= "MOVE " + getFactoryByID(i).getID() + " " + getClosestEnemyFactory(getFactoryByID(i)) + " " + c + ";";
                 }
             }
@@ -355,6 +360,14 @@ class FactoryManager{
 		        }
 		    }
 		}
+=======
+                    command+= "MSG case 4, id=" + getFactoryByID(i).getID() + ";";
+                    command+= "MOVE " + getFactoryByID(i).getID() + " " + getClosestEnemyFactory(getFactoryByID(i)) + " " + c + ";";
+                    }
+                }
+            }
+		
+>>>>>>> 3ead5e726edbe6b15c44bd99928b09cced9c65f8
 		
 		
 		
