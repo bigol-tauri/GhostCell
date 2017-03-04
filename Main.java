@@ -277,6 +277,9 @@ class FactoryManager{
 			    command += "INC "+temp.getID()+";";
 			}
 			
+			//send bomb to enemy's intial base
+			command += "BOMB " + temp.getID()+ " "+ enemyIDs.get(0) + ";";
+			
 			
 			//send 3 to each
 			command+= "MOVE " + temp.getID() + " " + best1 + " " + "3"+";";
@@ -300,7 +303,7 @@ class FactoryManager{
            
            
           
-		if(temp.getCC()>=2){
+		if(temp.getCC()>2){
 		    temp = selectTEMP();
 		    command += "MSG case 3, id="+temp.getID()+";";
 			if(temp.getCC()<=3){
@@ -350,7 +353,7 @@ class FactoryManager{
 /////////supplemental CASE B: Controlled factory has a production value of <3 and holds 11 or more cyborgs
 		for(Integer i : controlledIDs) {
 		    if(getFactoryByID(i).getProduction() < 3 && getFactoryByID(i).getCC() >= 11){
-		        if(command.indexOf("INC "+i+";")== -1){
+		        if(command.indexOf("INC "+i+";") == -1){
 		            command += "INC "+i+";";
 		        }
 		    }
